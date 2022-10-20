@@ -4,26 +4,87 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
+
 - main
 
+
+
 pool:
+
   vmImage: ubuntu-latest
 
+
+
 variables:
+
   buildConfiguration: 'Release'
 
+  buildPlatform: 'Any CPU'
+
+
+
 steps:
+
 - script: dotnet build --configuration $(buildConfiguration)
+
   displayName: 'dotnet build $(buildConfiguration)'
 
-- task: DotNetCoreCLI@2
+  
+
+
+
+- task: NuGetToolInstaller@1
+
+  name: 'NuGetToolInstaller'
+
+  displayName: 'NuGet tool installer'
+
+
+
+- task: NuGetCommand@2
+
+  name: 'NuGetRestore'
+
+  displayName: 'NuGet restore packages'
+
   inputs:
+
+    command: 'restore'
+
+    restoreSolution: '$(solution)'
+
+    feedsToUse: 'select'
+
+
+
+- task: DotNetCoreCLI@2
+
+  inputs:
+
+    command: 'build'
+
+- task: DotNetCoreCLI@2
+
+  inputs:
+
     command: 'publish'
-    publishWebProjects: true
-    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+
+    publishWebProjects: false
+
+    projects: '**/*.csproj'
+
+    arguments: '-o $(Build.ArtifactStagingDirectory)/Output'
+
+
+
+
 
 # this code takes all the files in $(Build.ArtifactStagingDirectory) and uploads them as an artifact of your build.
+
 - task: PublishPipelineArtifact@1
+
   inputs:
+
     targetPath: '$(Build.ArtifactStagingDirectory)' 
-    artifactName: 'myWebsiteName'
+
+    artifactName: 'Build-Artifacts'
